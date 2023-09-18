@@ -51,8 +51,8 @@ void StereoCalib::start_stereo_calib() {
 
         Mat left_image, right_image;
 
-        int ret = stream_left.read(left_image);
-        ret = stream_right.read(right_image);
+        int ret = stream_left.read(left_image); // capture image left
+        ret = stream_right.read(right_image);   // capture iamge right
 
         if (!ret) {
             throw std::runtime_error(
@@ -62,21 +62,32 @@ void StereoCalib::start_stereo_calib() {
             );
         }
 
-        static bool first_calib = false; 
+        // capture left and right image synchronously
+        static bool first_calib = false;
         static int capture_cnt = 0;
         /* ---------- while running as 30 fps START ---------- */
         /**
          * @brief calculate calib in this section
          * 
          */
-        
+
+        Mat left_image_gray, right_image_gray; 
+        if (first_calib) {
+            undistort(left_image, left_image_gray, camera_mat_left, dist_coeff_left);
+            undistort(right_image, right_image_gray, camera_mat_right, dist_coeff_right);
+            cvtColor(left_image_gray, left_image_gray, COLOR_RGB2GRAY);
+            cvtColor(right_image_gray, right_image_gray, COLOR_RGB2GRAY);
+        } else {
+            cvtColor(left_image, left_image_gray, COLOR_RGB2GRAY);
+            cvtColor(right_image, right_image_gray, COLOR_RGB2GRAY);
+        }
 
 
 
         
 
 
-       /* ------------ while running as 30 fps END ----------- */
+        /* ------------ while running as 30 fps END ----------- */
 
         auto end_time = high_resolution_clock::now();
         duration<double> elapse =  end_time - start_time;
