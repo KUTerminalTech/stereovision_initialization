@@ -1,5 +1,7 @@
 #include "StereoCalib.h"
 
+#include <opencv2/calib3d/calib3d_c.h>
+
 #include <fmt/core.h>
 #include <fmt/color.h>
 
@@ -11,19 +13,29 @@ using namespace std::chrono;
 // StereoCalib::StereoCalib(Mat& actualOne, Mat& actualTwo)
 //     : m_imageOne(actualOne), m_imageTwo(actualTwo)
 // {  }
-StereoCalib::StereoCalib(std::string left_cam_path, std::string right_cam_path)
-    : left_cam_path(left_cam_path), right_cam_path(right_cam_path) 
+StereoCalib::StereoCalib(
+    std::string left_cam_path,
+    std::string right_cam_path,
+    int chessboard_horizontal_corner_num,
+    int chessboard_vertical_corner_num,
+    int chessboard_square_size
+) :
+left_cam_path(left_cam_path),
+right_cam_path(right_cam_path),
+hor_corner_n(chessboard_horizontal_corner_num),
+ver_corner_n(chessboard_vertical_corner_num),
+square_size(chessboard_square_size) 
 {  }
 
 StereoCalib::~StereoCalib() {
-    // m_imageOne.release();
-    // m_imageTwo.release();
-    // img1.release();
-    // img2.release();
-    // gray1.release();
-    // gray2.release();
-    // m_imageOne.release();
-    // m_imageTwo.release();
+    camera_mat_left.release();
+    camera_mat_right.release();
+    dist_coeff_left.release();
+    dist_coeff_right.release();
+    rotation_mat.release();
+    translation_mat.release();
+    essential_mat.release();
+    fundamental_mat.release();
 }
 
 void StereoCalib::start_stereo_calib() {
@@ -82,7 +94,61 @@ void StereoCalib::start_stereo_calib() {
             cvtColor(right_image, right_image_gray, COLOR_RGB2GRAY);
         }
 
+        vector<Point3f> objp;
+        for(size_t i = 0; i < ver_corner_n; i++) {
+            for(size_t j = 0; j < hor_corner_n; j++) {
+                objp.push_back(Point3f(j * square_size, i * square_size, 0.0f));
+            }
+        }
 
+        bool success_l = findChessboardCorners(
+            left_image_gray,
+            Size(hor_corner_n, ver_corner_n),
+            corner_pts_l,
+            CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE
+        );
+        
+        bool success_r = findChessboardCorners(
+            right_image_gray,
+            Size(hor_corner_n, ver_corner_n),
+            corner_pts_r,
+            CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE
+        );
+
+        if (success_l && success_r) {
+            TermCriteria criteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 30, 0.001);
+
+            cornerSubPix(left_image_gray, corner_pts_l, Size(11, 11), Size(-1, -1), criteria);
+            cornerSubPix(right_image_gray, corner_pts_r, Size(11, 11), Size(-1, -1), criteria);
+
+            drawChessboardCorners(left_image_gray, Size(hor_corner_n, ver_corner_n), corner_pts_l, success_l);
+            drawChessboardCorners(right_image_gray, Size(hor_corner_n, ver_corner_n), corner_pts_r, success_r);
+
+            if (capture_cnt > 30) { // 
+                object_points.push_back(objp);
+                img_points_l.push_back(corner_pts_l);
+                img_points_r.push_back(corner_pts_r);
+
+                capture_cnt = 0;
+
+                stereoCalibrate(
+                    object_points,
+                    img_points_l, img_points_r,
+                    camera_mat_left, dist_coeff_left,
+                    camera_mat_right, dist_coeff_right,
+                    Size(hor_corner_n, ver_corner_n),
+                    rotation_mat,
+                    translation_mat,
+                    essential_mat,
+                    fundamental_mat,
+                    CV_CALIB_SAME_FOCAL_LENGTH | CV_CALIB_ZERO_TANGENT_DIST,
+                    cvTermCriteria(CV_TERMCRIT_ITER + CV_TERMCRIT_EPS, 100, 1e-5)
+                );
+
+                first_calib = true;
+            }
+
+        }
 
         
 

@@ -8,11 +8,21 @@
 
 using namespace tinyxml2;
 
+template<typename ...T>
+void xmlThrowError_noElement(std::string element_desc) {
+    throw std::runtime_error(
+        fmt::format("[{}] there's no \"{}\" element. error code: {}\n",
+            fmt::format(fg(fmt::color::red), "CRITIC"),
+            element_desc
+        )
+    );
+} 
+
 int main(int argc, char* argv[]){
 
-    // XMLDocument* camera_path_xml = new XMLDocument(); 
-    XMLDocument camera_path_xml;
-    XMLError xmlret = camera_path_xml.LoadFile(CONFIG_DIR_PATH "camera_path.xml");
+    // XMLDocument* camera_param_xml = new XMLDocument(); 
+    XMLDocument camera_param_xml;
+    XMLError xmlret = camera_param_xml.LoadFile(CONFIG_DIR_PATH "cam_param.xml");
     if ((int) xmlret) {
         throw std::runtime_error(
             fmt::format("[{}] xml parse failed error code: {}\n",
@@ -21,37 +31,41 @@ int main(int argc, char* argv[]){
             )
         );
     }
-    XMLElement* root = camera_path_xml.FirstChildElement("camera_path");
-    if (!root) {
-        throw std::runtime_error(
-            fmt::format("[{}] there's no \"camera_path\" element.\n",
-                fmt::format(fg(fmt::color::red), "CRITIC")
-            )
-        );
+    XMLElement* param = camera_param_xml.FirstChildElement("param");
+    if (!param) {
+        xmlThrowError_noElement("param");
     }
 
-    XMLElement* root_left = root->FirstChildElement("left");
-    if (!root) {
-        throw std::runtime_error(
-            fmt::format("[{}] there's no \"left\" element.\n",
-                fmt::format(fg(fmt::color::red), "CRITIC")
-            )
-        );
+    XMLElement* left = param->FirstChildElement("left");
+    if (!left) {
+        xmlThrowError_noElement("left");
     }
 
-    XMLElement* root_right = root->FirstChildElement("right");
-    if (!root) {
-        throw std::runtime_error(
-            fmt::format("[{}] there's no \"right\" element.\n",
-                fmt::format(fg(fmt::color::red), "CRITIC")
-            )
-        );
+    XMLElement* right = param->FirstChildElement("right");
+    if (!right) {
+        xmlThrowError_noElement("right");
     }
 
-    std::string left_cam_path = root_left->GetText();
-    std::string right_cam_path = root_right->GetText();
+    int horizontal_corner_n;
+    int vertical_corner_n;
+    int square_n;
 
-    StereoCalib s_calib(left_cam_path, right_cam_path);
+    if ((int) param->QueryIntAttribute("horizontal_corner", &horizontal_corner_n)) {
+        xmlThrowError_noElement("horizontal_corner");
+    }
+
+    if ((int) param->QueryIntAttribute("vertical_corner", &vertical_corner_n)) {
+        xmlThrowError_noElement("vertical_corner");
+    }
+
+    if ((int) param->QueryIntAttribute("square_length", &square_n)) {
+        xmlThrowError_noElement("square_length");
+    }
+
+    std::string left_cam_path = left->GetText();
+    std::string right_cam_path = right->GetText();
+
+    StereoCalib s_calib(left_cam_path, right_cam_path, horizontal_corner_n, vertical_corner_n, square_n);
     
     // TODO implement stereo calibration below
 
