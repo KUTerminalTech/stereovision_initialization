@@ -75,6 +75,10 @@ void StereoCalib::start_stereo_calib() {
 
     Mat left_image, right_image;
     while (true) {
+        // capture left and right image synchronously
+        static bool first_calib = false;
+        static int capture_cnt = 0;
+
         auto start_time = high_resolution_clock::now();
 
         int ret = stream_left.read(left_image); // capture image left
@@ -88,9 +92,6 @@ void StereoCalib::start_stereo_calib() {
             );
         }
 
-        // // capture left and right image synchronously
-        static bool first_calib = false;
-        static int capture_cnt = 0;
         /* ---------- while running as 30 fps START ---------- */
         /**
          * @brief calculate calib in this section
@@ -99,27 +100,32 @@ void StereoCalib::start_stereo_calib() {
 
         Mat left_image_gray, right_image_gray; 
         if (first_calib) {
-            undistort(left_image, left_image_gray, camera_mat_left, dist_coeff_left);
-            undistort(right_image, right_image_gray, camera_mat_right, dist_coeff_right);
-            cvtColor(left_image_gray, left_image_gray, COLOR_RGB2GRAY);
-            cvtColor(right_image_gray, right_image_gray, COLOR_RGB2GRAY);
-        } else {
-            cvtColor(left_image, left_image_gray, COLOR_RGB2GRAY);
-            cvtColor(right_image, right_image_gray, COLOR_RGB2GRAY);
+            undistort(left_image, left_image, camera_mat_left, dist_coeff_left);
+            undistort(right_image, right_image, camera_mat_right, dist_coeff_right);
         }
 
+#if (CV_VERSION_MAJOR >= 4)
+        cvtColor(left_image, left_image_gray, COLOR_RGB2GRAY);
+        cvtColor(right_image, right_image_gray, COLOR_RGB2GRAY);
+#else
+        cvtColor(left_image, left_image_gray, CV_RGB2GRAY);
+        cvtColor(right_image, right_image_gray, CV_RGB2GRAY);
+#endif 
+
         bool success_l = findChessboardCorners(
-            left_image_gray,
-            Size(hor_corner_n, ver_corner_n),
+            left_image,
+            Size(ver_corner_n, hor_corner_n),
             corner_pts_l,
             CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE
+            // CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FILTER_QUADS 
         );
         
         bool success_r = findChessboardCorners(
-            right_image_gray,
-            Size(hor_corner_n, ver_corner_n),
+            right_image,
+            Size(ver_corner_n, hor_corner_n),
             corner_pts_r,
             CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE
+            // CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FILTER_QUADS 
         );
 
         if (success_l && success_r) {
@@ -130,6 +136,7 @@ void StereoCalib::start_stereo_calib() {
 
             drawChessboardCorners(left_image_gray, Size(hor_corner_n, ver_corner_n), corner_pts_l, success_l);
             drawChessboardCorners(right_image_gray, Size(hor_corner_n, ver_corner_n), corner_pts_r, success_r);
+            
 
             // if (capture_cnt > 30) { // 
             //     object_points.push_back(objp);
