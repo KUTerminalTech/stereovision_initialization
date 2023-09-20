@@ -1,6 +1,6 @@
 <param>
-    <left>left_cam_path</left>
-    <right>right_cam_path</right>
+    <left>/dev/video2</left>
+    <right>/dev/video4</right>
     <horizontal_corner>10</horizontal_corner>
     <vertical_corner>7</vertical_corner>
     <square_length>25</square_length>

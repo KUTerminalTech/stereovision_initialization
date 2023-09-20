@@ -9,7 +9,7 @@
 #include <iostream>
 #include <stdio.h>
 
-#define FPS 30; // 30 fps
+#define FPS 30 // 30 fps
 
 using namespace cv;
 using namespace std;

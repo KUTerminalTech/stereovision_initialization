@@ -40,13 +40,21 @@ StereoCalib::~StereoCalib() {
 
 void StereoCalib::start_stereo_calib() {
 
-    auto stream_left = VideoCapture(left_cam_path);
-    auto stream_right = VideoCapture(right_cam_path);
+#if __linux__
+    auto stream_left = VideoCapture(left_cam_path, CAP_V4L2);
+    auto stream_right = VideoCapture(right_cam_path, CAP_V4L2);
+#elif __APPLE__
+    // TODO make macOS version
+#elif __WINDOWS__
+    // TODO make windows version
+#endif
 
-    stream_left.set(CAP_PROP_FRAME_WIDTH, 660);
-    stream_left.set(CAP_PROP_FRAME_HEIGHT, 660);
-    stream_right.set(CAP_PROP_FRAME_WIDTH, 660);
-    stream_right.set(CAP_PROP_FRAME_HEIGHT, 660);
+    // stream_left.set(CAP_PROP_FRAME_WIDTH, 660);
+    // stream_left.set(CAP_PROP_FRAME_HEIGHT, 660);
+    // stream_right.set(CAP_PROP_FRAME_WIDTH, 660);
+    // stream_right.set(CAP_PROP_FRAME_HEIGHT, 660);
+    // stream_left.set(CAP_PROP_FPS, (double) FPS);
+    // stream_right.set(CAP_PROP_FPS, (double) FPS);
 
     if (!stream_left.isOpened() || !stream_right.isOpened()) {
         throw std::runtime_error(
@@ -58,10 +66,16 @@ void StereoCalib::start_stereo_calib() {
 
     double desired_sleep_time = 1.0 / (double) FPS;
 
+    vector<Point3f> objp;
+    for(size_t i = 0; i < ver_corner_n; i++) {
+        for(size_t j = 0; j < hor_corner_n; j++) {
+            objp.push_back(Point3f(j * square_size, i * square_size, 0.0f));
+        }
+    }
+
+    Mat left_image, right_image;
     while (true) {
         auto start_time = high_resolution_clock::now();
-
-        Mat left_image, right_image;
 
         int ret = stream_left.read(left_image); // capture image left
         ret = stream_right.read(right_image);   // capture iamge right
@@ -74,7 +88,7 @@ void StereoCalib::start_stereo_calib() {
             );
         }
 
-        // capture left and right image synchronously
+        // // capture left and right image synchronously
         static bool first_calib = false;
         static int capture_cnt = 0;
         /* ---------- while running as 30 fps START ---------- */
@@ -92,13 +106,6 @@ void StereoCalib::start_stereo_calib() {
         } else {
             cvtColor(left_image, left_image_gray, COLOR_RGB2GRAY);
             cvtColor(right_image, right_image_gray, COLOR_RGB2GRAY);
-        }
-
-        vector<Point3f> objp;
-        for(size_t i = 0; i < ver_corner_n; i++) {
-            for(size_t j = 0; j < hor_corner_n; j++) {
-                objp.push_back(Point3f(j * square_size, i * square_size, 0.0f));
-            }
         }
 
         bool success_l = findChessboardCorners(
@@ -124,34 +131,33 @@ void StereoCalib::start_stereo_calib() {
             drawChessboardCorners(left_image_gray, Size(hor_corner_n, ver_corner_n), corner_pts_l, success_l);
             drawChessboardCorners(right_image_gray, Size(hor_corner_n, ver_corner_n), corner_pts_r, success_r);
 
-            if (capture_cnt > 30) { // 
-                object_points.push_back(objp);
-                img_points_l.push_back(corner_pts_l);
-                img_points_r.push_back(corner_pts_r);
+            // if (capture_cnt > 30) { // 
+            //     object_points.push_back(objp);
+            //     img_points_l.push_back(corner_pts_l);
+            //     img_points_r.push_back(corner_pts_r);
 
-                capture_cnt = 0;
+            //     capture_cnt = 0;
 
-                stereoCalibrate(
-                    object_points,
-                    img_points_l, img_points_r,
-                    camera_mat_left, dist_coeff_left,
-                    camera_mat_right, dist_coeff_right,
-                    Size(hor_corner_n, ver_corner_n),
-                    rotation_mat,
-                    translation_mat,
-                    essential_mat,
-                    fundamental_mat,
-                    CV_CALIB_SAME_FOCAL_LENGTH | CV_CALIB_ZERO_TANGENT_DIST,
-                    cvTermCriteria(CV_TERMCRIT_ITER + CV_TERMCRIT_EPS, 100, 1e-5)
-                );
+            //     stereoCalibrate(
+            //         object_points,
+            //         img_points_l, img_points_r,
+            //         camera_mat_left, dist_coeff_left,
+            //         camera_mat_right, dist_coeff_right,
+            //         Size(hor_corner_n, ver_corner_n),
+            //         rotation_mat,
+            //         translation_mat,
+            //         essential_mat,
+            //         fundamental_mat,
+            //         CV_CALIB_SAME_FOCAL_LENGTH | CV_CALIB_ZERO_TANGENT_DIST,
+            //         cvTermCriteria(CV_TERMCRIT_ITER + CV_TERMCRIT_EPS, 100, 1e-5)
+            //     );
 
-                first_calib = true;
-            }
+            //     first_calib = true;
+            // }
 
         }
-
-        
-
+        imshow("image_left", left_image_gray);
+        imshow("image_right", right_image_gray);
 
         /* ------------ while running as 30 fps END ----------- */
 
@@ -161,6 +167,10 @@ void StereoCalib::start_stereo_calib() {
         double sleep_time = desired_sleep_time - elapse.count();
         if (sleep_time > 0) {
             std::this_thread::sleep_for(microseconds(static_cast<int>(sleep_time * 1e6)));
+        }
+
+        if (waitKey(1) == 27) {
+            break;
         }
     }
 
