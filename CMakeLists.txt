@@ -19,7 +19,7 @@ add_executable(${CMAKE_PROJECT_NAME}
     main.cpp
 
     src/StereoCalib.cpp
-    # src/disparidade.cpp
+    src/CalibConfig.cpp
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE 
