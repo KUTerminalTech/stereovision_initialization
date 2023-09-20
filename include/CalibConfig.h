@@ -15,8 +15,13 @@ public:
     CalibConfig(std::string config_path);
     ~CalibConfig() = default;
 
+#if __linux__
     const std::string leftCameraFdIdx() const;
     const std::string rightCameraFdIdx() const;
+#elif __APPLE__
+    const int leftCameraFdIdx() const;
+    const int rightCameraFdIdx() const;
+#endif
     const int numHorizontalCorner() const;
     const int numVerticalCorner() const;
     const int chessboardSquareLength() const;

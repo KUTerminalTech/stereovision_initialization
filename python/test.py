@@ -4,23 +4,29 @@ import numpy as np
 import cv2
 
 if __name__ == '__main__':
-    cap = cv2.VideoCapture("/dev/video2")
-    cap2 = cv2.VideoCapture("/dev/video4")
+    # cap = cv2.VideoCapture("/dev/video2")
+    # cap2 = cv2.VideoCapture("/dev/video4")
 
     # cap.set(cv2.CAP_PROP_FPS, 30)
     # cap.set
 
-    while True:
-        retval, image = cap.read()
-        retval2, image2 = cap2.read()
+    cap = cv2.VideoCapture()
 
-        if not retval:
-            break
+    for i in range(1500):
+        if cap.open(i):
+            print("Found camera {}".format(i))
 
-        cv2.imshow("image", image)
-        cv2.imshow("image2", image2)
+    # while True:
+    #     retval, image = cap.read()
+    #     retval2, image2 = cap2.read()
 
-        key = cv2.waitKey(30)
+    #     if not retval:
+    #         break
 
-        if key == 27:
-            break
+    #     cv2.imshow("image", image)
+    #     cv2.imshow("image2", image2)
+
+    #     key = cv2.waitKey(30)
+
+    #     if key == 27:
+    #         break

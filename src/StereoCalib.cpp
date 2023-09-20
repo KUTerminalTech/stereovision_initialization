@@ -14,14 +14,24 @@ using namespace std::chrono;
 //     : m_imageOne(actualOne), m_imageTwo(actualTwo)
 // {  }
 StereoCalib::StereoCalib(
+#if __linux__
     std::string left_cam_path,
     std::string right_cam_path,
+#elif __APPLE__
+    int left_cam_param,
+    int right_cam_param,
+#endif
     int chessboard_horizontal_corner_num,
     int chessboard_vertical_corner_num,
     int chessboard_square_size
 ) :
+#if __linux__
 left_cam_path(left_cam_path),
 right_cam_path(right_cam_path),
+#elif __APPLE__
+left_cam_param(left_cam_param),
+right_cam_param(right_cam_param),
+#endif
 hor_corner_n(chessboard_horizontal_corner_num),
 ver_corner_n(chessboard_vertical_corner_num),
 square_size(chessboard_square_size) 
@@ -45,6 +55,8 @@ void StereoCalib::start_stereo_calib() {
     auto stream_right = VideoCapture(right_cam_path, CAP_V4L2);
 #elif __APPLE__
     // TODO make macOS version
+    auto stream_left = VideoCapture(left_cam_param, CAP_AVFOUNDATION);
+    auto stream_right = VideoCapture(right_cam_param, CAP_AVFOUNDATION);
 #elif __WINDOWS__
     // TODO make windows version
 #endif

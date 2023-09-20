@@ -19,8 +19,13 @@ class StereoCalib {
 public:
     // StereoCalib(cv::Mat& actualOne, cv::Mat& actualTwo);
     StereoCalib(
+#if __linux__
         std::string left_cam_path,
         std::string right_cam_path,
+#elif __APPLE__
+        int left_cam_param,
+        int right_cam_param,
+#endif
         int chessboard_horizontal_corner_num,
         int chessboard_vertical_corner_num,
         int chessboard_square_size
@@ -31,8 +36,13 @@ public:
     
 private:
 
+#if __linux__
     std::string left_cam_path;
     std::string right_cam_path;
+#elif __APPLE__
+    int left_cam_param;
+    int right_cam_param;
+#endif
 
     int hor_corner_n;  //Horizontal corners
     int ver_corner_n; //Vertical corners
