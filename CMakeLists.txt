@@ -10,7 +10,7 @@ find_package(PkgConfig REQUIRED)
 find_package(OpenCV REQUIRED)
 
 pkg_check_modules(yaml_cpp REQUIRED IMPORTED_TARGET yaml-cpp)
-pkg_check_modules(tinyxml REQUIRED IMPORTED_TARGET tinyxml2)
+pkg_check_modules(jsoncpp REQUIRED IMPORTED_TARGET jsoncpp)
 pkg_check_modules(fmt REQUIRED IMPORTED_TARGET fmt)
 
 include_directories(include)
@@ -18,6 +18,7 @@ include_directories(include)
 add_executable(${CMAKE_PROJECT_NAME}
     main.cpp
 
+    src/utils.cpp
     src/StereoCalib.cpp
     src/CalibConfig.cpp
 )
@@ -29,7 +30,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE 
     ${OpenCV_LIBS}
     PkgConfig::yaml_cpp
-    PkgConfig::tinyxml
+    PkgConfig::jsoncpp
     PkgConfig::fmt
 )
 

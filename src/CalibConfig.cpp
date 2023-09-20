@@ -1,81 +1,79 @@
 #include "CalibConfig.h"
+#include "utils.h"
 
 #include <fmt/core.h>
 #include <fmt/color.h>
 
-using namespace tinyxml2;
-
-void CalibConfig::xmlThrowRuntimeError_noElement(std::string element_desc) {
-    throw std::runtime_error(
-        fmt::format("[{}] there's no \"{}\" element.\n",
-            fmt::format(fg(fmt::color::red), "CRITIC"),
-            element_desc.c_str()
-        )
-    );
-}
+#include <fstream>
 
 CalibConfig::CalibConfig(std::string config_path) {
-    XMLError ret = xml_file.LoadFile(config_path.c_str());
 
-    if ((int) ret) {
-        throw std::runtime_error(
-            fmt::format("[{}] xml parse failed error code: {}\n",
-                fmt::format(fg(fmt::color::red), "CRITIC"),
-                (int) ret
-            )
-        );
+    std::ifstream json_file;
+    json_file.open(config_path, std::ifstream::in);
+    if (!json_file.is_open()) {
+        utils::critic_runtime_error("Json configuration file is not opened.");
     }
 
-    rootxml = xml_file.FirstChildElement("param");
-    if (!rootxml) {
-        xmlThrowRuntimeError_noElement("param");
+    Json::Reader config_reader;
+    if (!config_reader.parse(json_file, config_root)) {
+        utils::critic_runtime_error("Json file cannot be parsed.");
     }
+
+    if (config_root.isMember("camera_index")) {
+        camera_index = config_root["camera_index"];
+    } else {
+        utils::critic_runtime_error("camera_index is not a member of configuration.json.");
+    }
+
+    if (config_root.isMember("chessboard")) {
+        chessboard = config_root["chessboard"];
+    } else {
+        utils::critic_runtime_error("chessboard is not a member of configuration.json.");
+    }
+
 }
 
-const std::string CalibConfig::leftCameraFdPath() {
-    XMLElement* content = rootxml->FirstChildElement("left");
-    if(!content) {
-        xmlThrowRuntimeError_noElement("left");
+const std::string CalibConfig::leftCameraFdIdx() const {
+
+    if (!camera_index.isMember("left")) {
+        utils::critic_runtime_error("left is not a member of \"camera_index\"");
     }
 
-    return content->GetText();
+    return camera_index["left"].asString();
 }
 
-const std::string CalibConfig::rightCameraFdPath() {
-    XMLElement* content = rootxml->FirstChildElement("right");
-    if (!content) {
-        xmlThrowRuntimeError_noElement("right");
+const std::string CalibConfig::rightCameraFdIdx() const {
+
+    if (!camera_index.isMember("right")) {
+        utils::critic_runtime_error("right is not a member of \"camera_index\"");
     }
 
-    return content->GetText();
+    return camera_index["right"].asString();
 }
 
-const int CalibConfig::numHorizontalCorner() {
-    int ret;
-    XMLElement* content = rootxml->FirstChildElement("horizontal_corner");
-    if (!content || (int) content->QueryIntText(&ret)) {
-        xmlThrowRuntimeError_noElement("horizontal_corner");
+const int CalibConfig::numHorizontalCorner() const {
+
+    if (!chessboard.isMember("num_hor_corner")) {
+        utils::critic_runtime_error("num_hor_corner is not a member of \"chessboard\"");
     }
 
-    return ret;
+    return chessboard["num_hor_corner"].asInt();
 }
 
-const int CalibConfig::numVerticalCorner() {
-    int ret;
-    XMLElement* content = rootxml->FirstChildElement("vertical_corner");
-    if (!content || (int) content->QueryIntText(&ret)) {
-        xmlThrowRuntimeError_noElement("vertical_corner");
+const int CalibConfig::numVerticalCorner() const {
+
+    if (!chessboard.isMember("num_ver_corner")) {
+        utils::critic_runtime_error("num_ver_corner is not a member of \"chessboard\"");
     }
 
-    return ret;
+    return chessboard["num_ver_corner"].asInt();
 }
 
-const int CalibConfig::chessboardSquareLength() {
-    int ret;
-    XMLElement* content = rootxml->FirstChildElement("square_length");
-    if (!content || (int) content->QueryIntText(&ret)) {
-        xmlThrowRuntimeError_noElement("square_length");
+const int CalibConfig::chessboardSquareLength() const {
+
+    if (!chessboard.isMember("square_length_mm")) {
+        utils::critic_runtime_error("square_length_mm is not a member of \"chessboard\"");
     }
 
-    return ret;
+    return chessboard["square_length_mm"].asInt();
 }

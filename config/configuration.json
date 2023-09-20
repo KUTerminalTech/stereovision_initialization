@@ -1,0 +1,11 @@
+{
+    "camera_index": {
+        "left": "/dev/video2",
+        "right": "/dev/video4"
+    },
+    "chessboard": {
+        "num_hor_corner": 10,
+        "num_ver_corner": 7,
+        "square_length_mm": 25
+    }
+}

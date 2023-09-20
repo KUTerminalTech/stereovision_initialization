@@ -4,7 +4,7 @@
 * OpenCV
 * fmt
 * yaml-cpp
-* tinyxml2
+* jsoncpp
 
 # Clone repository
 
