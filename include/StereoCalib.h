@@ -22,7 +22,7 @@ public:
 #if __linux__
         std::string left_cam_path,
         std::string right_cam_path,
-#elif __APPLE__
+#else // __APPLE__ || _WIN32
         int left_cam_param,
         int right_cam_param,
 #endif
@@ -39,7 +39,7 @@ private:
 #if __linux__
     std::string left_cam_path;
     std::string right_cam_path;
-#elif __APPLE__
+#else // __APPLE__ || _WIN32
     int left_cam_param;
     int right_cam_param;
 #endif

@@ -43,7 +43,7 @@ CalibConfig::CalibConfig(std::string config_path) {
  */
 #if __linux__
 const std::string CalibConfig::leftCameraFdIdx() const {
-#elif __APPLE__
+#else // __APPLE__ || _WIN32
 const int CalibConfig::leftCameraFdIdx() const {
 #endif
 
@@ -61,14 +61,14 @@ const int CalibConfig::leftCameraFdIdx() const {
  */
 #if __linux__
     return camera_index["left"].asString();
-#elif __APPLE__
+#else // __APPLE__ || _WIN32
     return camera_index["left"].asInt();
 #endif
 }
 
 #if __linux__
 const std::string CalibConfig::rightCameraFdIdx() const {
-#elif __APPLE__
+#else // __APPLE__ || _WIN32
 const int CalibConfig::rightCameraFdIdx() const {
 #endif
 
@@ -78,7 +78,7 @@ const int CalibConfig::rightCameraFdIdx() const {
 
 #if __linux__
     return camera_index["right"].asString();
-#elif __APPLE__
+#else // __APPLE__ || _WIN32
     return camera_index["right"].asInt();
 #endif
 }

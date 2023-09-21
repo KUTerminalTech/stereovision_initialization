@@ -18,7 +18,7 @@ public:
 #if __linux__
     const std::string leftCameraFdIdx() const;
     const std::string rightCameraFdIdx() const;
-#elif __APPLE__
+#else // __APPLE__ || _WIN32
     const int leftCameraFdIdx() const;
     const int rightCameraFdIdx() const;
 #endif
