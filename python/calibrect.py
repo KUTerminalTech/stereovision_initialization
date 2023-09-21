@@ -2,6 +2,7 @@
 
 import cv2 as cv
 import json
+import os
 
 class Configuration:
 
@@ -55,7 +56,16 @@ class StereoCalibNRect:
         stream_left = cv.VideoCapture(self.left_cam_path) 
         stream_right = cv.VideoCapture(self.right_cam_pth)
 
+        if not stream_left.isOpened() and not stream_right.isOpened():
+            raise RuntimeError("camera is not opened.")
+
+        objp = []
+        for i in range(0, self.ver_corner_n):
+            for j in range(0, self.hor_corner_n):
+                objp.append()
+            
         # TODO make below section
+
        
         
         
@@ -72,5 +82,5 @@ if __name__ == '__main__':
                                     config.num_vertical_corner,
                                     config.chessboard_square_len)
 
-    calib_n_rect.startStereoCalib()
+    # calib_n_rect.startStereoCalib()
 

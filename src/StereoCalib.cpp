@@ -79,8 +79,8 @@ void StereoCalib::startStereoCalibNRect() {
     double desired_sleep_time = 1.0 / (double) FPS;
 
     vector<Point3f> objp;
-    for(size_t i = 0; i < ver_corner_n; i++) {
-        for(size_t j = 0; j < hor_corner_n; j++) {
+    for(size_t i = 0; i < hor_corner_n; i++) {
+        for(size_t j = 0; j < ver_corner_n; j++) {
             objp.push_back(Point3f(j * square_size, i * square_size, 0.0f));
         }
     }
@@ -115,10 +115,14 @@ void StereoCalib::startStereoCalibNRect() {
 
         Mat left_image_gray, right_image_gray; 
         if (first_calib) {
-            undistort(left_image, left_image, camera_mat_left, dist_coeff_left);
-            undistort(right_image, right_image, camera_mat_right, dist_coeff_right);
-        }
+            Mat left_image_ = left_image.clone();
+            Mat right_image_ = right_image.clone();
+            left_image.release();
+            right_image.release();
 
+            undistort(left_image_, left_image, camera_mat_left, dist_coeff_left);
+            undistort(right_image_, right_image, camera_mat_right, dist_coeff_right);
+        }
 #if (CV_VERSION_MAJOR >= 4)
         cvtColor(left_image, left_image_gray, COLOR_RGB2GRAY);
         cvtColor(right_image, right_image_gray, COLOR_RGB2GRAY);
@@ -166,7 +170,7 @@ void StereoCalib::startStereoCalibNRect() {
                     img_points_l, img_points_r,
                     camera_mat_left, dist_coeff_left,
                     camera_mat_right, dist_coeff_right,
-                    Size(hor_corner_n, ver_corner_n),
+                    Size(left_image_gray.rows, left_image.cols),
                     rotation_mat,
                     translation_mat,
                     essential_mat,
@@ -236,6 +240,8 @@ void StereoCalib::startStereoCalibNRect() {
     calib_info_storage << "projection_left" << projection_left;
     calib_info_storage << "projection_right" << projection_right;
     calib_info_storage << "disparity" << disparity;
+
+    calib_info_storage.release();
     
     // cout << Q << endl;
     
