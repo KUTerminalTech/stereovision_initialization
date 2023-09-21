@@ -61,7 +61,6 @@ void StereoCalib::start_stereo_calib() {
     // TODO make windows version
 #else
 #endif
-
     // stream_left.set(CAP_PROP_FRAME_WIDTH, 660);
     // stream_left.set(CAP_PROP_FRAME_HEIGHT, 660);
     // stream_right.set(CAP_PROP_FRAME_WIDTH, 660);
@@ -96,6 +95,9 @@ void StereoCalib::start_stereo_calib() {
 
         int ret = stream_left.read(left_image); // capture image left
         ret = stream_right.read(right_image);   // capture iamge right
+
+        // assert image size have to be same.
+        assert(left_image.size() == right_image.size());
 
         if (!ret) {
             throw std::runtime_error(
@@ -147,8 +149,8 @@ void StereoCalib::start_stereo_calib() {
             cornerSubPix(left_image_gray, corner_pts_l, Size(11, 11), Size(-1, -1), criteria);
             cornerSubPix(right_image_gray, corner_pts_r, Size(11, 11), Size(-1, -1), criteria);
 
-            drawChessboardCorners(left_image_gray, Size(hor_corner_n, ver_corner_n), corner_pts_l, success_l);
-            drawChessboardCorners(right_image_gray, Size(hor_corner_n, ver_corner_n), corner_pts_r, success_r);
+            drawChessboardCorners(left_image_gray, Size(ver_corner_n, hor_corner_n), corner_pts_l, success_l);
+            drawChessboardCorners(right_image_gray, Size(ver_corner_n, hor_corner_n), corner_pts_r, success_r);
 
             char check = static_cast<char>(waitKey(1) & 0xFF);
             if (check == 0x63 || check == 0x43) { // if keyboard press 'C' or 'c'
@@ -156,6 +158,8 @@ void StereoCalib::start_stereo_calib() {
 
                 img_points_l.push_back(corner_pts_l);
                 img_points_r.push_back(corner_pts_r);
+
+                alert::info_message("Start Stereo calibration");
 
                 stereoCalibrate(
                     object_points,
@@ -198,104 +202,40 @@ void StereoCalib::start_stereo_calib() {
         }
     }
 
-    // Size board_sz = Size(board_w, board_h);
-    // int board_n = board_w*board_h;
-    
-    // for (int y = 0; y < board_h; y++) {
-    //     for (int x = 0; x < board_w; x++) {
-    //         obj.push_back(Point3f(y * squareSize, x * squareSize, 0));
-    //     }
-    // }
-        
-    // int success = 0;
-    // int k = 0;
-    // char key = 0;
-    // bool found1 = false;
-    // bool found2 = false;
-    
-    // //Saves images for calibration
-    // while(success < numBoards){
-    //     img1 = m_imageOne.clone();
-    //     img2 = m_imageTwo.clone();
-        
-    //     cvtColor(img1, gray1, CV_BGR2GRAY);
-    //     cvtColor(img2, gray2, CV_BGR2GRAY);
-        
-    //     found1 = findChessboardCorners(img1, board_sz, corners1, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FILTER_QUADS);
-    //     found2 = findChessboardCorners(img2, board_sz, corners2, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FILTER_QUADS);
-        
-    //     if(found1){
-    //         cornerSubPix(gray1, corners1, Size(11, 11), Size(-1, -1), TermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 30, 0.1));
-    //         drawChessboardCorners(gray1, board_sz, corners1, found1);
-    //     }
-        
-    //     if(found2){
-    //         cornerSubPix(gray2, corners2, Size(11, 11), Size(-1, -1), TermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 30, 0.1));
-    //         drawChessboardCorners(gray2, board_sz, corners2, found2);
-    //     }
-        
-    //     imshow("image1", gray1);
-    //     imshow("image2", gray2);
-        
-    //     k = waitKey(10);
-    //     key = (char) waitKey(10);
-        
-    //     if(found1 && found2){
-    //         k = waitKey(0);
-    //         key = (char) waitKey(0);
-    //     }
-    //     if(key == 27){
-    //         break;
-    //     }
-    //     cout << "images amount: ";
-    //     cout << success << endl;
-    //     if(key == ' ' && found1 != 0 && found2 != 0){ // if(k == ' ' && found1 != 0 && found2 != 0)
-    //         imagePoints1.push_back(corners1);
-    //         imagePoints2.push_back(corners2);
-    //         object_points.push_back(obj);
-    //         cout << "Stored corners " << endl;
-    //         success++;
-            
-    //         if(success >= numBoards){
-    //             break;
-    //         }
-    //     }
-    // }
-    
-    // destroyAllWindows();
-    
-    // //Calibrates and saves calibration data
-    // cout << "Starting Calibration..." << endl;
-    
-    // CM1 = Mat(3, 3, CV_64FC1);
-    // CM2 = Mat(3, 3, CV_64FC1);
-        
-    // stereoCalibrate(object_points, imagePoints1, imagePoints2, CM1, D1, CM2, 
-    //         D2, img1.size(), R, T, E, F,
-    //         CV_CALIB_SAME_FOCAL_LENGTH | CV_CALIB_ZERO_TANGENT_DIST,
-    //         cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5));
-    
-    // FileStorage fs1("mystereocalib.yml", FileStorage::WRITE);
-    // fs1 << "CM1" << CM1;
-    // fs1 << "CM2" << CM2;
-    // fs1 << "D1" << D1;
-    // fs1 << "D2" << D2;
-    // fs1 << "R" << R;
-    // fs1 << "T" << T;
-    // fs1 << "E" << E;
-    // fs1 << "F" << F;
-    
-    // cout << "Calibration completed" << endl;
-    
-    // //Rectify and save the rectification data
-    // cout << "Starting Rectification..." << endl;
-    
-    // stereoRectify(CM1, D1, CM2, D2, img1.size(), R, T, R1, R2, P1, P2, Q);
-    // fs1 << "R1" << R1;
-    // fs1 << "R2" << R2;
-    // fs1 << "P1" << P1;
-    // fs1 << "P2" << P2;
-    // fs1 << "Q" << Q;
+    destroyAllWindows();
+
+    alert::info_message("Getting Rectification matrix...");
+
+    stereoRectify(
+        camera_mat_left, dist_coeff_left,
+        camera_mat_right, dist_coeff_right,
+        left_image.size(),
+        rotation_mat,
+        translation_mat,
+        rectify_left,
+        rectify_right,
+        projection_left,
+        projection_right,
+        disparity
+    );
+
+    alert::info_message("Getting Rectification matrix complete...");
+
+    FileStorage calib_info_storage(CONFIG_DIR_PATH "calib_storage.yaml", FileStorage::WRITE);
+
+    calib_info_storage << "camera_matrix_left" << camera_mat_left;
+    calib_info_storage << "camera_matrix_right" << camera_mat_right;
+    calib_info_storage << "dist_coefficient_left" << dist_coeff_left;
+    calib_info_storage << "dist_coefficient_right" << dist_coeff_right;
+    calib_info_storage << "rotation" << rotation_mat;
+    calib_info_storage << "translation" << translation_mat;
+    calib_info_storage << "essential" << essential_mat;
+    calib_info_storage << "fundamental" << fundamental_mat;
+    calib_info_storage << "rectification_left" << rectify_left;
+    calib_info_storage << "rectification_right" << rectify_right;
+    calib_info_storage << "projection_left" << projection_left;
+    calib_info_storage << "projection_right" << projection_right;
+    calib_info_storage << "disparity" << disparity;
     
     // cout << Q << endl;
     

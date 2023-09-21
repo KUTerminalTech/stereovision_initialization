@@ -79,12 +79,16 @@ private:
      * @brief rectification parameter
      * 
      */
-    // R1 - 3x3 Rectification Transformation (Rotation Matrix) for the first Camera
-    // R2 - 3x3 Rectification Transformation (Rotation Matrix) for the second Camera
-    // P1 - Projection matrix 3x4 in the new and rectified coordinate system of the first camera
-    // P2 - Projection matrix 3x4 in the new and rectified coordinate system of the second camera
-    // Q - Disparity matrix by depth 4x4
-    Mat R1, R2, P1, P2, Q; 
+    // rectify_left - 3x3 Rectification Transformation (Rotation Matrix) for the left Camera
+    // rectify_right - 3x3 Rectification Transformation (Rotation Matrix) for the right Camera
+    // projection_left - Projection matrix 3x4 in the new and rectified coordinate system of the left camera
+    // projection_right - Projection matrix 3x4 in the new and rectified coordinate system of the right camera
+    // disparity - Disparity matrix by depth 4x4
+    Mat rectify_left;
+    Mat rectify_right;
+    Mat projection_left;
+    Mat projection_right;
+    Mat disparity;
     
 };
 
