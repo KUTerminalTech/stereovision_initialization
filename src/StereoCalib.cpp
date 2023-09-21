@@ -1,4 +1,5 @@
 #include "StereoCalib.h"
+#include "utils.h"
 
 #include <opencv2/calib3d/calib3d_c.h>
 
@@ -89,7 +90,7 @@ void StereoCalib::start_stereo_calib() {
     while (true) {
         // capture left and right image synchronously
         static bool first_calib = false;
-        static int capture_cnt = 0;
+        static int stereo_cnt = 0;
 
         auto start_time = high_resolution_clock::now();
 
@@ -148,33 +149,37 @@ void StereoCalib::start_stereo_calib() {
 
             drawChessboardCorners(left_image_gray, Size(hor_corner_n, ver_corner_n), corner_pts_l, success_l);
             drawChessboardCorners(right_image_gray, Size(hor_corner_n, ver_corner_n), corner_pts_r, success_r);
-            
 
-            // if (capture_cnt > 30) { // 
-            //     object_points.push_back(objp);
-            //     img_points_l.push_back(corner_pts_l);
-            //     img_points_r.push_back(corner_pts_r);
+            char check = static_cast<char>(waitKey(1) & 0xFF);
+            if (check == 0x63 || check == 0x43) { // if keyboard press 'C' or 'c'
+                object_points.push_back(objp); 
 
-            //     capture_cnt = 0;
+                img_points_l.push_back(corner_pts_l);
+                img_points_r.push_back(corner_pts_r);
 
-            //     stereoCalibrate(
-            //         object_points,
-            //         img_points_l, img_points_r,
-            //         camera_mat_left, dist_coeff_left,
-            //         camera_mat_right, dist_coeff_right,
-            //         Size(hor_corner_n, ver_corner_n),
-            //         rotation_mat,
-            //         translation_mat,
-            //         essential_mat,
-            //         fundamental_mat,
-            //         CV_CALIB_SAME_FOCAL_LENGTH | CV_CALIB_ZERO_TANGENT_DIST,
-            //         cvTermCriteria(CV_TERMCRIT_ITER + CV_TERMCRIT_EPS, 100, 1e-5)
-            //     );
+                stereoCalibrate(
+                    object_points,
+                    img_points_l, img_points_r,
+                    camera_mat_left, dist_coeff_left,
+                    camera_mat_right, dist_coeff_right,
+                    Size(hor_corner_n, ver_corner_n),
+                    rotation_mat,
+                    translation_mat,
+                    essential_mat,
+                    fundamental_mat,
+                    CV_CALIB_SAME_FOCAL_LENGTH | CV_CALIB_ZERO_TANGENT_DIST,
+                    cvTermCriteria(CV_TERMCRIT_ITER + CV_TERMCRIT_EPS, 100, 1e-5)
+                );
 
-            //     first_calib = true;
-            // }
+                stereo_cnt += 1;
+
+                alert::info_message("Stereo calibration count: %d", stereo_cnt);
+
+                first_calib = true;
+            }
 
         }
+
         imshow("image_left", left_image_gray);
         imshow("image_right", right_image_gray);
 
