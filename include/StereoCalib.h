@@ -32,7 +32,7 @@ public:
     );
     ~StereoCalib();
     
-    void start_stereo_calib();
+    void startStereoCalibNRect();
     
 private:
 

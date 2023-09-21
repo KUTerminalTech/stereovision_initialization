@@ -16,7 +16,7 @@ int main(int argc, char* argv[]){
     );
     
     // TODO implement stereo calibration below
-    s_calib.start_stereo_calib();
+    s_calib.startStereoCalibNRect();
 
     return 0;
 }

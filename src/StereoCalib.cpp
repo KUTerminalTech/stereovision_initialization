@@ -49,7 +49,7 @@ StereoCalib::~StereoCalib() {
     fundamental_mat.release();
 }
 
-void StereoCalib::start_stereo_calib() {
+void StereoCalib::startStereoCalibNRect() {
 
 #if __linux__
     auto stream_left = VideoCapture(left_cam_path, CAP_V4L2);
