@@ -42,48 +42,46 @@ CalibConfig::CalibConfig(std::string config_path) {
  * 
  */
 #if __linux__
-
 const std::string CalibConfig::leftCameraFdIdx() const {
-
-    if (!camera_index.isMember("left")) {
-        utils::critic_runtime_error("left is not a member of \"camera_index\"");
-    }
-
-    return camera_index["left"].asString();
-
-}
-
-const std::string CalibConfig::rightCameraFdIdx() const {
-
-    if (!camera_index.isMember("right")) {
-        utils::critic_runtime_error("right is not a member of \"camera_index\"");
-    }
-
-    return camera_index["right"].asString();
-}
-
 #elif __APPLE__
-
 const int CalibConfig::leftCameraFdIdx() const {
+#endif
 
     if (!camera_index.isMember("left")) {
         utils::critic_runtime_error("left is not a member of \"camera_index\"");
     }
 
+/**
+ * @brief
+ *  Focusing on VideoCapture() method in OpenCV,
+ *  linux and MacOS parameter have to be different.
+ *  Therefore, Preprocessing have to be implemented for
+ *  grabbing appropraite parameter for videocapture.
+ * 
+ */
+#if __linux__
+    return camera_index["left"].asString();
+#elif __APPLE__
     return camera_index["left"].asInt();
-
+#endif
 }
 
+#if __linux__
+const std::string CalibConfig::rightCameraFdIdx() const {
+#elif __APPLE__
 const int CalibConfig::rightCameraFdIdx() const {
+#endif
 
     if (!camera_index.isMember("right")) {
         utils::critic_runtime_error("right is not a member of \"camera_index\"");
     }
 
+#if __linux__
+    return camera_index["right"].asString();
+#elif __APPLE__
     return camera_index["right"].asInt();
-}
-
 #endif
+}
 
 const int CalibConfig::numHorizontalCorner() const {
 
